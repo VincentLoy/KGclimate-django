@@ -1,5 +1,6 @@
 from django.http import HttpResponse
-from KGclimate.models import Climate_Class, Coordinate
+from KGclimate.models import Coordinate
+from KGclimate.functions import round_coordinate
 import json
 
 def index(request):
@@ -8,19 +9,9 @@ def index(request):
         lat = coordinates.get('latitude', None)
         lng = coordinates.get('longitude', None)
         if lat > -90 and lat < 90 and lng > -180 and lng < 180:
-            # Round to nearest of either .25 or .75, based on KG data format
-            # Latitude
-            direction = lat / abs(lat)
-            if (abs(lat) % 1) < 0.5:
-                lat = int(lat) + (0.25 * direction)
-            else:
-                lat = int(lat) + (0.75 * direction)
-            # Longitude
-            direction = lng / abs(lng)
-            if (abs(lng) % 1) < 0.5:
-                lng = int(lng) + (0.25 * direction)
-            else:
-                lng = int(lng) + (0.75 * direction)
+            # Format coordinates
+            lat = round_coordinate(lat)
+            lng = round_coordinate(lng)
             # Query db and return
             coordinate = Coordinate.objects.get(latitude=lat, longitude=lng)
             return HttpResponse(json.dumps({ 'class': coordinate.climate_class.climate_class }), content_type='application/json')
